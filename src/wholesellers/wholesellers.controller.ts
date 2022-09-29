@@ -22,11 +22,6 @@ import { CurrentUser } from 'src/auth/current-user.decorator';
 export class WholesellersController {
   constructor(private readonly wholesellersService: WholesellersService) {}
 
-  // @Post()
-  // create(@Body() createWholesellerDto: CreateWholesellerDto) {
-  //   return this.wholesellersService.create(createWholesellerDto);
-  // }
-
   //Creating wholeseller
   @Post('/create')
   async create(
@@ -40,7 +35,7 @@ export class WholesellersController {
 
   //Getting All Wholesellers
   @Get('/')
-  async allWholesellers(user: any) {
+  async allWholesellers(@AdminUser() user: any) {
     return await this.wholesellersService.getAllWholesellers();
   }
 
