@@ -9,6 +9,7 @@ import {
   Query,
   Put,
   UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { WholesellersService } from './wholesellers.service';
 import { CreateWholesellerDto } from './dto/create-wholeseller.dto';
@@ -23,6 +24,7 @@ export class WholesellersController {
   constructor(private readonly wholesellersService: WholesellersService) {}
 
   //Creating wholeseller
+  //! Admin-Route --->
   @Post('/create')
   async create(
     @Body() createWholesellerDto: CreateWholesellerDto,
@@ -30,23 +32,33 @@ export class WholesellersController {
   ) {
     return await this.wholesellersService.createWholeseller(
       createWholesellerDto,
+      user,
     );
   }
 
   //Getting All Wholesellers
   @Get('/')
-  async allWholesellers(@AdminUser() user: any) {
-    return await this.wholesellersService.getAllWholesellers();
+  async allWholesellers(@CurrentUser() user: any) {
+    if (user.role === 'admin' || user.role === 'employee') {
+      return await this.wholesellersService.getAllWholesellers();
+    } else {
+      throw new UnauthorizedException();
+    }
   }
 
   //Updating a wholeseller
-
+  //! Admin-Route --->
   @Put('/:id')
   async updateProduct(
     @Param('id') id: string,
     @Body() wholeseller: UpdateWholesellerDto,
+    @CurrentUser() user: any,
   ) {
-    return await this.wholesellersService.updateWholeseller(id, wholeseller);
+    return await this.wholesellersService.updateWholeseller(
+      id,
+      wholeseller,
+      user,
+    );
   }
 
   //Changing wholesellers Password
@@ -67,20 +79,23 @@ export class WholesellersController {
   }
 
   //Deleting a wholeseller
-
+  //! Admin-Route --->
   @Delete('/:id')
   async deleteWholeseller(@Param('id') id: string, @AdminUser() user: any) {
-    return await this.wholesellersService.deleteWholeseller(id);
+    return await this.wholesellersService.deleteWholeseller(id, user);
   }
 
   // Adding Multiple Wholesellers At Once
-
+  //! Admin-Route --->
   @Post('/uploadxls')
   async createWholesellersBulk(
     @Body() wholesellers: CreateWholesellerDto[],
     @AdminUser() user: any,
   ) {
-    return await this.wholesellersService.updateWholesellersXlsx(wholesellers);
+    return await this.wholesellersService.updateWholesellersXlsx(
+      wholesellers,
+      user,
+    );
   }
 
   @Get('/id/:id')
@@ -106,5 +121,22 @@ export class WholesellersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.wholesellersService.remove(+id);
+  }
+
+  //! Admin-Route --->
+  @Post('/sendNotificationByCategoty')
+  async sendNotificationByCategoty(@Body() body: any, @AdminUser() user: any) {
+    const { wholesellersList, message } = body;
+    return await this.wholesellersService.sendNotificationByCategory(
+      wholesellersList,
+      message,
+      user,
+    );
+  }
+
+  @Post('/findWholesellerByCategoryId')
+  async findWholesellerByCategoryId(@Body() body: any, @AdminUser() user: any) {
+    const { id } = body;
+    return this.wholesellersService.findUserByMultipleCategoryId(id);
   }
 }
